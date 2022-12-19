@@ -17,6 +17,7 @@ results_folder = '../reproducibility/results'
 # φάκελος όπου θα αποθηκευτούν (προσωρινά) όλα τα μοντέλα που όρισαν τα args
 new_results_folder = results_folder + '/new-results'
 
+
 class SaveResults:
     """
     Μορφή merged json
@@ -58,7 +59,7 @@ class SaveResults:
         '--bert_lr': '2e-5',
         '--adam_epsilon': '1e-8',
         '--weight_decay': '0.0',
-        '--seed' : '1000',
+        '--seed': '1000',
 
         '--num_layers': '1',
         '--gcn_dim': '300',
@@ -82,7 +83,6 @@ class SaveResults:
         self.output = None
         self.modified = None
 
-
     def _parse_args(self, args):
         """
         Παράγει τα μοντέλα (experiments) που θα εκτελεστούν σύμφωνα με τα args.
@@ -100,9 +100,9 @@ class SaveResults:
             product  = [('res14', '0'), ('res14', '1'), ('res15', '0'), ('res15', '1')]
         """
         mod_args, mod_lists = [], []
-        for i in range(len(args) // 2):     # 1
-            arg = args[2*i]
-            value = args[2*i+1]
+        for i in range(len(args) // 2):  # 1
+            arg = args[2 * i]
+            value = args[2 * i + 1]
 
             if value != SaveResults.default_values.get(arg, None):  # 2
                 mod_args.append(arg)
@@ -137,19 +137,18 @@ class SaveResults:
         if self.ignore_if_found and exists(f'{new_results_folder}/{filename}'):  # 2
             return None
 
-        self.output = {     # 3
+        self.output = {  # 3
             'setup': {
                 'filename': filename,
                 'dataset': dataset,
                 'device': self.device,
                 'model_param': self._model_parameters(),
             },
-            'results' : {
+            'results': {
                 'dev_set': []
             }
         }
         return self._get_arguments(self.output['setup']['model_param'])  # 4
-
 
     def _dataset_name(self):
         """
@@ -204,9 +203,9 @@ class SaveResults:
         else:
             self.output['results'][field] = value
 
- # -----------------------------------------------------------------------------------------------
- # Αποθήκευση αποτελεσμάτων
- # -----------------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------------
+    # Αποθήκευση αποτελεσμάτων
+    # -----------------------------------------------------------------------------------------------
     def _make_folder(self):
         """
         Δημιουργία φακέλων όπου θα αποθηκευτούν τα αποτελέσματα
@@ -236,7 +235,7 @@ class SaveResults:
         Τα επιμέρους μοντέλα θα διαγραφούν (4), όλα τα merged αρχεία θα παραμείνουν.
         """
         try:
-            with open(self.latest_merge(), "rb") as infile:  # 1
+            with open(SaveResults.latest_merge(), "rb") as infile:  # 1
                 result = json.load(infile)
         except TypeError:
             # δε βρέθηκαν προηγούμενες εκτελέσεις αποθηκευμένες σε merged json
@@ -252,8 +251,8 @@ class SaveResults:
             json.dump(result, outfile, indent=4)
         shutil.rmtree(new_results_folder)  # 4
 
-
-    def latest_merge(self):
+    @staticmethod
+    def latest_merge():
         """
         Έυρεση του πιο πρόσφατου merged αρχείου.
         @return: Όνομα αρχείου πχ 'results/2022-12-10 12-13-15.json'
@@ -266,7 +265,3 @@ class SaveResults:
         ]
         return f'{results_folder}/{max(filedates).__format__(pattern)}.json' \
             if len(filedates) > 0 else None
-
-
-
-
