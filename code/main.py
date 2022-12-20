@@ -8,7 +8,8 @@ import torch
 
 from data import label2id
 from train_model import ModelTraining
-from reproducibility.save_results import SaveResults
+sys.path.insert(0, '../reproducibility/')
+from save_results import SaveResults
 # Don't remove : from prepare_vocab import VocabHelp
 from prepare_vocab import VocabHelp
 
