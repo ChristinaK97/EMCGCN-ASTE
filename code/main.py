@@ -90,6 +90,7 @@ def run_model(results):
 
 
 def get_args():
+    parsed_args = parse_arguments()
     """
     Args του μοντέλου. Η τιμή του καθενός είναι είτε
     - Μία τιμή σαν str
@@ -104,23 +105,23 @@ def get_args():
     prefixes = ['../data/D1/', '../data/D2/']
     datasets = ['res14', 'lap14', 'res15', 'res16']
     return [
-        "--mode", "train",
-        '--bert_model_path', 'bert-base-uncased',
-        '--bert_feature_dim', '768',
+        "--mode", str(parsed_args.mode),
+        '--bert_model_path', str(parsed_args.bert_model_path),
+        '--bert_feature_dim', str(parsed_args.bert_feature_dim),
 
-        '--batch_size', '6',
-        '--epochs', '2',
-        '--learning_rate', '1e-3',
-        '--bert_lr', '2e-5',
-        '--adam_epsilon', '1e-8',
-        '--weight_decay', '0.0',
-        '--seed', '1000',
+        '--batch_size', str(parsed_args.batch_size),
+        '--epochs', str(parsed_args.epochs),
+        '--learning_rate', str(parsed_args.learning_rate),
+        '--bert_lr', str(parsed_args.bert_lr),
+        '--adam_epsilon', str(parsed_args.adam_epsilon),
+        '--weight_decay', str(parsed_args.weight_decay),
+        '--seed', str(parsed_args.seed),
 
-        '--num_layers', '1',
-        '--gcn_dim', '300',
-        '--pooling', 'avg',
-        '--prefix', '../data/D1/',
-        '--dataset', 'res14'
+        '--num_layers', str(parsed_args.num_layers),
+        '--gcn_dim', str(parsed_args.gcn_dim),
+        '--pooling', str(parsed_args.pooling),
+        '--prefix', str(parsed_args.prefix),
+        '--dataset', str(parsed_args.dataset)
     ]
 
 
