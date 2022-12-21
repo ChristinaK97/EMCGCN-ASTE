@@ -1,0 +1,149 @@
+[
+    {
+        "setup": {
+            "filename": "D1-res15__batch_size-6__epochs-1__seed-52__.json",
+            "dataset": "D1-res15",
+            "device": "NVIDIA GeForce RTX 3050 Laptop GPU",
+            "model_param": {
+                "prefix": "../data/D1/",
+                "model_dir": "savemodel/",
+                "task": "triplet",
+                "mode": "train",
+                "dataset": "res15",
+                "max_sequence_len": 102,
+                "device": "cuda",
+                "bert_model_path": "bert-base-uncased",
+                "bert_feature_dim": 768,
+                "batch_size": 6,
+                "epochs": 1,
+                "class_num": 10,
+                "seed": 52,
+                "learning_rate": 0.001,
+                "bert_lr": 2e-05,
+                "adam_epsilon": 1e-08,
+                "weight_decay": 0.0,
+                "emb_dropout": 0.5,
+                "num_layers": 1,
+                "pooling": "avg",
+                "gcn_dim": 300,
+                "relation_constraint": true,
+                "symmetry_decoding": false,
+                "post_size": 70,
+                "deprel_size": 45,
+                "postag_size": 828,
+                "synpost_size": 7
+            }
+        },
+        "results": {
+            "dev_set": [
+                0.3538461538461539
+            ],
+            "best_epoch": 0,
+            "best_epoch_f1": 0.3538461538461539,
+            "training_time": 23.443090200424194,
+            "test_set": {
+                "f1": 0.27424094025465234,
+                "precision": 0.26515151515151514,
+                "recall": 0.2839756592292089
+            }
+        }
+    },
+    {
+        "setup": {
+            "filename": "D1-res15__batch_size-6__epochs-1__seed-1000__.json",
+            "dataset": "D1-res15",
+            "device": "NVIDIA GeForce RTX 3050 Laptop GPU",
+            "model_param": {
+                "prefix": "../data/D1/",
+                "model_dir": "savemodel/",
+                "task": "triplet",
+                "mode": "train",
+                "dataset": "res15",
+                "max_sequence_len": 102,
+                "device": "cuda",
+                "bert_model_path": "bert-base-uncased",
+                "bert_feature_dim": 768,
+                "batch_size": 6,
+                "epochs": 1,
+                "class_num": 10,
+                "seed": 1000,
+                "learning_rate": 0.001,
+                "bert_lr": 2e-05,
+                "adam_epsilon": 1e-08,
+                "weight_decay": 0.0,
+                "emb_dropout": 0.5,
+                "num_layers": 1,
+                "pooling": "avg",
+                "gcn_dim": 300,
+                "relation_constraint": true,
+                "symmetry_decoding": false,
+                "post_size": 70,
+                "deprel_size": 45,
+                "postag_size": 828,
+                "synpost_size": 7
+            }
+        },
+        "results": {
+            "dev_set": [
+                0.36619718309859156
+            ],
+            "best_epoch": 0,
+            "best_epoch_f1": 0.36619718309859156,
+            "training_time": 23.513310194015503,
+            "test_set": {
+                "f1": 0.27594070695553025,
+                "precision": 0.3151041666666667,
+                "recall": 0.24543610547667344
+            }
+        }
+    },
+    {
+        "setup": {
+            "filename": "D1-res15__batch_size-6__epochs-1__seed-42__.json",
+            "dataset": "D1-res15",
+            "device": "NVIDIA GeForce RTX 3050 Laptop GPU",
+            "model_param": {
+                "prefix": "../data/D1/",
+                "model_dir": "savemodel/",
+                "task": "triplet",
+                "mode": "train",
+                "dataset": "res15",
+                "max_sequence_len": 102,
+                "device": "cuda",
+                "bert_model_path": "bert-base-uncased",
+                "bert_feature_dim": 768,
+                "batch_size": 6,
+                "epochs": 1,
+                "class_num": 10,
+                "seed": 42,
+                "learning_rate": 0.001,
+                "bert_lr": 2e-05,
+                "adam_epsilon": 1e-08,
+                "weight_decay": 0.0,
+                "emb_dropout": 0.5,
+                "num_layers": 1,
+                "pooling": "avg",
+                "gcn_dim": 300,
+                "relation_constraint": true,
+                "symmetry_decoding": false,
+                "post_size": 70,
+                "deprel_size": 45,
+                "postag_size": 828,
+                "synpost_size": 7
+            }
+        },
+        "results": {
+            "dev_set": [
+                0.37499999999999994
+            ],
+            "best_epoch": 0,
+            "best_epoch_f1": 0.37499999999999994,
+            "training_time": 22.201539516448975,
+            "test_set": {
+                "f1": 0.2984293193717278,
+                "precision": 0.42066420664206644,
+                "recall": 0.23123732251521298
+            }
+        }
+    }
+]
