@@ -1,19 +1,17 @@
-import copy
 import glob
 import json
 import re
 import shutil
-import sys
 from datetime import datetime
 from itertools import product
+from os import makedirs
 from os.path import exists
 
 import torch.cuda as cuda
-from os import makedirs
 
 pattern = '%Y-%m-%d %H-%M-%S'
 # φάκελος όπου θα αποθηκευτούν τα merged αρχεία αποτελεσμάτων
-results_folder = '../reproducibility/results'
+results_folder = 'reproducibility/results'
 # φάκελος όπου θα αποθηκευτούν (προσωρινά) όλα τα μοντέλα που όρισαν τα args
 new_results_folder = results_folder + '/new-results'
 
@@ -48,29 +46,12 @@ class SaveResults:
         ,...
     ]
     """
-    default_values = {
-        "--mode": "train",
-        '--bert_model_path': 'bert-base-uncased',
-        '--bert_feature_dim': '768',
 
-        '--batch_size': '6',
-        '--epochs': '100',
-        '--learning_rate': '1e-3',
-        '--bert_lr': '2e-5',
-        '--adam_epsilon': '1e-8',
-        '--weight_decay': '0.0',
-        '--seed': '1000',
-
-        '--num_layers': '1',
-        '--gcn_dim': '300',
-        '--pooling': 'avg'
-    }
-
-    def __init__(self, args, ignore_if_found=True):
+    def __init__(self, parser, ignore_if_found=True):
         """
         Αποθήκευση των αποτελεσμάτων της εκπαίδευσης των μοντέλων που ορίζουν τα args
-        @param args: List με τις παράμετρους του μοντέλου, ανά δύο στοιχεία: '--όνομα', 'τιμή'
-                    Η τιμή είναι str ή list(str) -> πολλαπλές τιμές για την παραμέτρο ώστε
+        @param parser: Parser με τις παράμετρους του μοντέλου
+                    Η τιμή είναι type(arg) -μία- ή list(type(arg)) -> πολλαπλές τιμές για την παραμέτρο ώστε
                     να οριστούν πολλαπλά μοντέλα.
         @param ignore_if_found: Αν έχει τρέξει ήδη το ίδιο μοντέλο και τα αποτελέσματα του είναι
                     αποθηκευμένα σε json στο φάκελο new-results, μην το ξανατρέξεις
@@ -78,37 +59,57 @@ class SaveResults:
         self.ignore_if_found = ignore_if_found
         self._make_folder()
         self.device = cuda.get_device_name(cuda.current_device())
-        self.mod_args, self.experiments = self._parse_args(args)
+        self.given_args = parser.parse_args()
+        self.mod_args, self.experiments = self._parse_args(parser)
+
+        print(f"Modified args : {self.mod_args}\nCombinations : {self.modified}")
 
         self.output = None
         self.modified = None
 
-    def _parse_args(self, args):
+    def _parse_args(self, parser):
         """
         Παράγει τα μοντέλα (experiments) που θα εκτελεστούν σύμφωνα με τα args.
-        1. Για κάθε arg (παράμετρο) που έχει τιμή value (str ή list(str)):
+        1. Για κάθε arg (παράμετρο) που έχει τιμή value (type(arg) -μία- ή list(type(arg))):
             2. Κρατάει τα arg και τις τιμές που έχουν τροποποιηθεί σε σχέση με
-               τις default values
+               τις default values (και τα prefix, dataset)
         @return: mod_args: list(str) -> οι παράμετροι που έχουν τροποιηθεί
                  product: list(tuple) όπου len(tuple) = len(mod_args)
                     Κάθε δυνατός συνδιασμός για τις παραμέτρους που έχουν τροποιημένη τιμή.
 
             πχ Για τα τροποιημένα:
-               '--dataset' = ['res14', 'res15']
-               '--seed' = ['0', '1']
-            mod_args =  ['--dataset', '--seed']
-            product  = [('res14', '0'), ('res14', '1'), ('res15', '0'), ('res15', '1')]
+               --dataset  res14 res15 --seed 0 1
+            Θα οριστούν οι συνδιασμοί (4 μοντέλα):
+            mod_args =  ['dataset', 'seed']
+            product  = [(res14, 0), (res14, 1), (res15, 0), (res15, 1)]
         """
         mod_args, mod_lists = [], []
-        for i in range(len(args) // 2):  # 1
-            arg = args[2 * i]
-            value = args[2 * i + 1]
+        for arg, value in vars(self.given_args).items():     # 1
+            if not self._is_not_modified(arg, value, parser.get_default(arg)):  # 2
 
-            if value != SaveResults.default_values.get(arg, None):  # 2
                 mod_args.append(arg)
                 mod_lists.append(
                     value if isinstance(value, list) else [value])
         return mod_args, list(product(*mod_lists))  # 3
+
+    def _is_not_modified(self, arg, value, default):
+        """
+        1. Κρατάει ως "modified" τα prefix και dataset -> modified
+        2. Αν η δοθείσα τιμή τιμή είναι list μπορεί να έχει τροποποιηθεί:
+            Αν έχουν οριστεί παραπάνω από μία τιμές -> modified
+            Αν μία τιμή, πρέπει να ελέγξει επιπλέον αν είναι η default ή όχι(->modified)
+        3. Αν δεν είναι λίστα, ελέγχει αν είναι η default.
+        @param arg: str όνομα παραμέτρου
+        @param value: Η τιμή που δώθηκε από το χρήστη
+        @param default: Η προκαθορισμένη τιμή του parser
+        """
+        if arg == 'prefix' or arg == 'dataset':  # 1
+            return False
+        if isinstance(value, list) :  # 2
+            return len(value) == 1 and self._get_arg_value(value) == default
+        else:
+            return value == default  # 3
+
 
     def __len__(self):
         """
@@ -124,8 +125,7 @@ class SaveResults:
                     και τα results της εκπαίδευσης.
         @param item: index του τρέχοντος experiment
         @return:
-            List με τις παράμετρους του μοντέλου, ανά δύο στοιχεία: '--όνομα', 'τιμή'
-            ώστε να διαβαστούν από την main.parse_arguments (4)
+            Namespace args με τις παράμετρους του τρέχοντος μοντέλου (4)
             ή
             None Αν έχει τρέξει ήδη το ίδιο μοντέλο και τα αποτελέσματα του είναι
                  αποθηκευμένα σε json στο φάκελο new-results, μην το ξανατρέξεις (2)
@@ -137,25 +137,26 @@ class SaveResults:
         if self.ignore_if_found and exists(f'{new_results_folder}/{filename}'):  # 2
             return None
 
+        self._model_parameters()
         self.output = {  # 3
             'setup': {
                 'filename': filename,
                 'dataset': dataset,
                 'device': self.device,
-                'model_param': self._model_parameters(),
+                'model_param': vars(self.given_args),
             },
             'results': {
                 'dev_set': []
             }
         }
-        return self._get_arguments(self.output['setup']['model_param'])  # 4
+        return self.given_args  # 4
 
     def _dataset_name(self):
         """
         @return: Συνδιασμό του prefix και dataset πχ D1-res14
         """
         return re.findall(r'D\d/[a-z0-9]+',
-                          self.modified['--prefix'] + self.modified['--dataset'])[0].replace('/', '-')
+                          self.modified['prefix'] + self.modified['dataset'])[0].replace('/', '-')
 
     def _get_filename(self, dataset):
         """
@@ -166,29 +167,31 @@ class SaveResults:
         """
         filename = f'{dataset}__'
         for f in self.mod_args:
-            if f not in ['--prefix', '--dataset']:
-                filename += f'{f[2:]}-{self.modified[f]}__'
+            if f not in ['prefix', 'dataset']:
+                filename += f'{f}-{self.modified[f]}__'
         return f'{filename}.json'
 
     def _model_parameters(self):
         """
         Οι τιμές των παραμετρων του τρέχοντος μοντέλου
-        1. Αντιγραφή των default τιμών των παραμέτρων
-        2. Αλλαγή τιμών όσων έχουν τροποιηθεί (με τις τιμές του τρέχοντος experiment)
-        @return: Dict{όνομα παραμέτρου : τιμή}
+        => Αλλαγή τιμών όσων έχουν τροποιηθεί (με τις τιμές του τρέχοντος experiment)
+           Για τιμές που δεν έχουν τροποποιηθεί αλλά είναι σαν list πρέπει να
+           απομονωθεί το στοιχείο για να δωθεί στο μοντέλο.
         """
-        model_param = copy.deepcopy(SaveResults.default_values)  # 1
-        for f in self.mod_args:
-            model_param[f] = self.modified[f]  # 2
-        return model_param
+        for arg, value in vars(self.given_args).items():
+            setattr(self.given_args, arg,
+                    self.modified.get(arg, self._get_arg_value(value))
+            )
 
-    def _get_arguments(self, model_param):
+
+    def _get_arg_value(self, value):
         """
-        Μετατροπή του dict των παραμέτρων σε λίστα ώστε να διαβαστούν από την main.parse_arguments.
-        @param model_param: Dict{όνομα παραμέτρου : τιμή}. Έξοδος της _model_parameters
-        @return: List με τις παράμετρους του μοντέλου, ανά δύο στοιχεία: '--όνομα', 'τιμή'
+        @param value: list(type(arg)) για args που διαβάζονται με την μορφή λίστας (nargs='+')
+                            => πρέπει να γίνει type(arg)
+                type(arg) μένει όπως είναι
         """
-        return [sys.argv[0]] + [value for field in model_param for value in (field, model_param[field])]
+        return value[0] if isinstance(value, list) else value
+
 
     def update(self, field, value):
         """
