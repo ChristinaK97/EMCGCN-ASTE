@@ -62,7 +62,7 @@ class SaveResults:
         self.given_args = parser.parse_args()
         self.mod_args, self.experiments = self._parse_args(parser)
 
-        print(f"Modified args : {self.mod_args}\nCombinations : {self.modified}")
+        print(f"Modified args : {self.mod_args}\nCombinations : {self.experiments}")
 
         self.output = None
         self.modified = None
