@@ -12,6 +12,8 @@ from reproducibility.save_results import SaveResults
 # Don't remove : from prepare_vocab import VocabHelp
 from prepare_vocab import VocabHelp
 
+from reproducibility.paper_experiments import run_datasets_with_multiple_seeds
+
 def run_parser():
     """
     Κάθε argument θα είναι
@@ -98,35 +100,7 @@ def run_model(args, results):
         model.test()
 
 
-def get_args_from_pycharm():
-    # TODO remove
-
-    # prefixes '../data/D1/', '../data/D2/'
-    # datasets 'res14', 'lap14', 'res15', 'res16'
-    return [
-        '--tag', 'a description',
-        "--mode", "train",
-        '--bert_model_path', 'bert-base-uncased',
-        '--bert_feature_dim', '768',
-
-        '--batch_size', '6',
-        '--epochs', '1',
-        '--learning_rate', '1e-3',
-        '--bert_lr', '2e-5',
-        '--adam_epsilon', '1e-8',
-        '--weight_decay', '0.0',
-        '--seed', '42',
-
-        '--num_layers', '1',
-        '--gcn_dim', '300',
-        '--pooling', 'avg',
-        '--prefix', '../data/D1/',
-        '--dataset', 'res15'
-    ]
-
-
-
-if __name__ == '__main__':
+def main(args_as_list=None):
     """
     1. Parse τα args είτε από terminal είτε από ide
     2. Για κάθε συνδιασμό που ορίζουν τα args (κάθε μοντέλο)
@@ -135,8 +109,8 @@ if __name__ == '__main__':
             5. Αποθήκευση των αποτελεσμάτων που μαζεύτηκαν για το μοντέλο σε ξεχωριστό json
     6. Merge τα json του κάθε μοντέλου σε ένα
     """
-    if len(sys.argv) == 1:  # δε χρησιμοποιήθηκε terminal
-        sys.argv.extend(get_args_from_pycharm())
+    if args_as_list is not None:  # δε χρησιμοποιήθηκε terminal
+        sys.argv.extend(args_as_list)
 
     parser = run_parser()              # 1
     merge_results_files = True
@@ -149,5 +123,15 @@ if __name__ == '__main__':
             results.write_output()      # 5
     if merge_results_files:             # 6
         results.merge_outputs()
+
+
+
+if __name__ == '__main__':
+    if sys.argv[1] == 'multiple_seeds':
+        sys.argv.remove('multiple_seeds')
+        args = run_datasets_with_multiple_seeds()
+    else:
+        args = None
+    main(args)
 
 

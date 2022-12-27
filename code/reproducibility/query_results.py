@@ -2,7 +2,7 @@ import json
 
 import objectpath
 
-from code.reproducibility.save_results import SaveResults
+from save_results import SaveResults
 
 """
 objectpath examples
