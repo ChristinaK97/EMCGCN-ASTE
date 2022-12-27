@@ -1,10 +1,10 @@
 import random
 
-def get_args_as_list(tag, prefixes, datasets, seeds, batch_sizes):
+def get_args_as_list(tag, prefixes, datasets, seeds, batch_sizes, use_features=None):
 
     # prefixes '../data/D1/', '../data/D2/'
     # datasets 'res14', 'lap14', 'res15', 'res16'
-    return [
+    args = [
         '--tag', tag,
         "--mode", "train",
         '--bert_model_path', 'bert-base-uncased',
@@ -24,6 +24,8 @@ def get_args_as_list(tag, prefixes, datasets, seeds, batch_sizes):
         '--prefix', *prefixes,
         '--dataset', *datasets
     ]
+    if use_features is not None:
+        args.extend(['--use_features', use_features])
 
 def arg_values_as_string(values):
     return [str(v) for v in values] if isinstance(values, list) else [str(values)]
@@ -38,8 +40,6 @@ def run_datasets_with_multiple_seeds():
 
     args = get_args_as_list(tag, prefixes, datasets, seeds, batch_sizes)
     return args
-
-
 
 
 

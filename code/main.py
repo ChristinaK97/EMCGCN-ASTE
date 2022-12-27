@@ -29,6 +29,8 @@ def run_parser():
 
     parser.add_argument('--tag', type=str, default=" ",
                         help='A description given to the current experiment')
+    parser.add_argument('--use_features', nargs='+', type=str, default=[['post', 'deprel', 'postag', 'synpost']],
+                        help='dataset and embedding path prefix')
 
     parser.add_argument('--prefix', nargs='+', type=str, default="../data/D1/",
                         help='dataset and embedding path prefix')
@@ -85,6 +87,9 @@ def set_seed(seed):
 def run_model(args, results):
     # torch.set_printoptions(precision=None, threshold=float("inf"), edgeitems=None, linewidth=None, profile=None)
 
+    if args.use_features == ['None']:
+        setattr(args, 'use_features', [])
+
     if args.seed is not None:
         set_seed(args.seed)
 
@@ -129,6 +134,33 @@ def main(args_as_list=None):
         results.merge_outputs()
 
 
+def get_args_from_pycharm():
+    # TODO remove
+
+    # prefixes '../data/D1/', '../data/D2/'
+    # datasets 'res14', 'lap14', 'res15', 'res16'
+    # use_features 'post', 'deprel', 'postag', 'synpost' maintain order
+    return [
+        '--tag', 'a description',
+        '--use_features', 'post', 'deprel',
+        "--mode", "train",
+        '--bert_model_path', 'bert-base-uncased',
+        '--bert_feature_dim', '768',
+
+        '--batch_size', '6',
+        '--epochs', '10',
+        '--learning_rate', '1e-3',
+        '--bert_lr', '2e-5',
+        '--adam_epsilon', '1e-8',
+        '--weight_decay', '0.0',
+        '--seed', '1000',
+
+        '--num_layers', '1',
+        '--gcn_dim', '300',
+        '--pooling', 'avg',
+        '--prefix', '../data/D1/',
+        '--dataset', 'res14'
+    ]
 
 
 if __name__ == '__main__':
@@ -136,7 +168,7 @@ if __name__ == '__main__':
         sys.argv.remove('multiple_seeds')
         args = run_datasets_with_multiple_seeds()
     else:
-        args = None
+        args = get_args_from_pycharm()
     main(args)
 
 

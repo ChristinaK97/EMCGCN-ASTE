@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from transformers import BertModel, BertTokenizer
 
 
+
 class LayerNorm(nn.Module):
     "Construct a layernorm module (See citation for details)."
 
@@ -121,17 +122,18 @@ class Biaffine(nn.Module):
 
 
 class EMCGCN(torch.nn.Module):
-    def __init__(self, args):
+    def __init__(self, args, use):
         super(EMCGCN, self).__init__()
         self.args = args
+        self.use = use
         self.bert = BertModel.from_pretrained(args.bert_model_path, return_dict=False)
         self.tokenizer = BertTokenizer.from_pretrained(args.bert_model_path, return_dict=False)
         self.dropout_output = torch.nn.Dropout(args.emb_dropout)
 
-        self.post_emb = torch.nn.Embedding(args.post_size, args.class_num, padding_idx=0)
-        self.deprel_emb = torch.nn.Embedding(args.deprel_size, args.class_num, padding_idx=0)
-        self.postag_emb  = torch.nn.Embedding(args.postag_size, args.class_num, padding_idx=0)
-        self.synpost_emb = torch.nn.Embedding(args.synpost_size, args.class_num, padding_idx=0)
+        self.feat_emb = {
+            feature : torch.nn.Embedding(getattr(args, f'{feature}_size') , args.class_num, padding_idx=0, device=args.device)
+            for feature in self.use
+        }
         
         self.triplet_biaffine = Biaffine(args, args.gcn_dim, args.gcn_dim, args.class_num, bias=(True, True))
         self.ap_fc = nn.Linear(args.bert_feature_dim, args.gcn_dim)
@@ -145,9 +147,16 @@ class EMCGCN(torch.nn.Module):
 
         for i in range(self.num_layers):
             self.gcn_layers.append(
-                GraphConvLayer(args.device, args.gcn_dim, 5*args.class_num, args.class_num, args.pooling))
+                GraphConvLayer(args.device, args.gcn_dim, (1+len(self.use))*args.class_num, args.class_num, args.pooling))
 
-    def forward(self, tokens, masks, word_pair_position, word_pair_deprel, word_pair_pos, word_pair_synpost):
+    def forward(self, tokens, masks, word_pair_feature):
+        """
+        @param word_pair_position:  post_emb     relative position distance         rpd
+        @param word_pair_deprel:    deprel_emb   syntactic dependency relations     dep
+        @param word_pair_pos:       postag_emb   part of speech combination         psc
+        @param word_pair_synpost:   synpost_emb  tree based distance                tbd
+        @return:
+        """
         bert_feature, _ = self.bert(tokens, masks)
         bert_feature = self.dropout_output(bert_feature) 
 
@@ -155,11 +164,12 @@ class EMCGCN(torch.nn.Module):
         tensor_masks = masks.unsqueeze(1).expand(batch, seq, seq).unsqueeze(-1)
         
         # * multi-feature
-        word_pair_post_emb = self.post_emb(word_pair_position)
-        word_pair_deprel_emb = self.deprel_emb(word_pair_deprel)
-        word_pair_postag_emb = self.postag_emb(word_pair_pos)
-        word_pair_synpost_emb = self.synpost_emb(word_pair_synpost)
-        
+        word_pair_feat_emb = {
+            feature : self.feat_emb[feature](value)
+            for feature, value in word_pair_feature.items()
+            if feature in self.use
+        }
+
         # BiAffine
         ap_node = F.relu(self.ap_fc(bert_feature))
         op_node = F.relu(self.op_fc(bert_feature))
@@ -167,26 +177,33 @@ class EMCGCN(torch.nn.Module):
         gcn_input = F.relu(self.dense(bert_feature))
         gcn_outputs = gcn_input
 
-        weight_prob_list = [biaffine_edge, word_pair_post_emb, word_pair_deprel_emb, word_pair_postag_emb, word_pair_synpost_emb]
+        weight_prob_list = [biaffine_edge] + self.filter_syntactic_rel(word_pair_feat_emb)
         
         biaffine_edge_softmax = F.softmax(biaffine_edge, dim=-1) * tensor_masks
-        word_pair_post_emb_softmax = F.softmax(word_pair_post_emb, dim=-1) * tensor_masks
-        word_pair_deprel_emb_softmax = F.softmax(word_pair_deprel_emb, dim=-1) * tensor_masks
-        word_pair_postag_emb_softmax = F.softmax(word_pair_postag_emb, dim=-1) * tensor_masks
-        word_pair_synpost_emb_softmax = F.softmax(word_pair_synpost_emb, dim=-1) * tensor_masks
+        word_pair_feat_emb_softmax = {
+            feature : F.softmax(value, dim=-1) * tensor_masks
+            for feature, value in word_pair_feat_emb.items()
+        }
 
         self_loop = []
         for _ in range(batch):
             self_loop.append(torch.eye(seq))
-        self_loop = torch.stack(self_loop).to(self.args.device).unsqueeze(1).expand(batch, 5*self.args.class_num, seq, seq) * tensor_masks.permute(0, 3, 1, 2).contiguous()
+        self_loop = torch.stack(self_loop).to(self.args.device).unsqueeze(1)\
+            .expand(batch, (1 + len(self.use))*self.args.class_num, seq, seq) * tensor_masks.permute(0, 3, 1, 2)\
+            .contiguous()
         
-        weight_prob = torch.cat([biaffine_edge, word_pair_post_emb, word_pair_deprel_emb, \
-            word_pair_postag_emb, word_pair_synpost_emb], dim=-1)
-        weight_prob_softmax = torch.cat([biaffine_edge_softmax, word_pair_post_emb_softmax, \
-            word_pair_deprel_emb_softmax, word_pair_postag_emb_softmax, word_pair_synpost_emb_softmax], dim=-1)
+        weight_prob = torch.cat([biaffine_edge] + self.filter_syntactic_rel(word_pair_feat_emb), dim=-1)
+        weight_prob_softmax = torch.cat([biaffine_edge_softmax] + self.filter_syntactic_rel(word_pair_feat_emb_softmax), dim=-1)
 
         for _layer in range(self.num_layers):
             gcn_outputs, weight_prob = self.gcn_layers[_layer](weight_prob_softmax, weight_prob, gcn_outputs, self_loop)  # [batch, seq, dim]
             weight_prob_list.append(weight_prob)
 
-        return weight_prob_list
+        model_prob_outputs = {'ba':weight_prob_list[0], 'p': weight_prob_list[-1]}
+        for i, feature in enumerate(self.use):
+            model_prob_outputs[feature] = weight_prob_list[i]
+
+        return model_prob_outputs
+
+    def filter_syntactic_rel(self, rel):
+        return [rel[key] for key in self.use]
