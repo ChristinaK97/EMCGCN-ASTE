@@ -117,12 +117,17 @@ def main(args_as_list=None):
 
     results = SaveResults(parser)
     for model_param in results:         # 2
+        mode = model_param.mode
+
         if model_param is not None:     # 3
             print(model_param)
             run_model(model_param, results)          # 4
-            results.write_output()      # 5
-    if merge_results_files:             # 6
+            if mode == 'train':
+                results.write_output()      # 5
+
+    if mode == 'train' and merge_results_files:             # 6
         results.merge_outputs()
+
 
 
 
