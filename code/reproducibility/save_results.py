@@ -27,7 +27,8 @@ class SaveResults:
                 dataset :  prefix-dataset πχ D1-res14
                 device : όνομα, όπου έτρεξε το μοντέλο
                 model_param : {
-                    --παράμετρος : τιμή σαν str
+                    παράμετρος : τιμή σαν str
+                    tag : μια περιγραφή που δίνεται στο τρέχον πείραμα
                 }
             },
             results : {
@@ -95,7 +96,7 @@ class SaveResults:
     def _is_not_modified(self, arg, value, default):
         """
         1. Κρατάει ως "modified" τα prefix και dataset -> modified
-        2. Αν η δοθείσα τιμή τιμή είναι list μπορεί να έχει τροποποιηθεί:
+        2. Αν η δοθείσα τιμή είναι list μπορεί να έχει τροποποιηθεί:
             Αν έχουν οριστεί παραπάνω από μία τιμές -> modified
             Αν μία τιμή, πρέπει να ελέγξει επιπλέον αν είναι η default ή όχι(->modified)
         3. Αν δεν είναι λίστα, ελέγχει αν είναι η default.
@@ -103,6 +104,8 @@ class SaveResults:
         @param value: Η τιμή που δώθηκε από το χρήστη
         @param default: Η προκαθορισμένη τιμή του parser
         """
+        if arg == 'tag' :
+            return True
         if arg == 'prefix' or arg == 'dataset':  # 1
             return False
         if isinstance(value, list) :  # 2

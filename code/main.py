@@ -25,6 +25,9 @@ def run_parser():
 
     parser = argparse.ArgumentParser()
 
+    parser.add_argument('--tag', type=str, default=" ",
+                        help='A description given to the current experiment')
+
     parser.add_argument('--prefix', nargs='+', type=str, default="../data/D1/",
                         help='dataset and embedding path prefix')
     parser.add_argument('--model_dir', type=str, default="savemodel/",
@@ -101,6 +104,7 @@ def get_args_from_pycharm():
     # prefixes '../data/D1/', '../data/D2/'
     # datasets 'res14', 'lap14', 'res15', 'res16'
     return [
+        '--tag', 'a description',
         "--mode", "train",
         '--bert_model_path', 'bert-base-uncased',
         '--bert_feature_dim', '768',
@@ -111,7 +115,7 @@ def get_args_from_pycharm():
         '--bert_lr', '2e-5',
         '--adam_epsilon', '1e-8',
         '--weight_decay', '0.0',
-        '--seed', '42', '4',
+        '--seed', '42',
 
         '--num_layers', '1',
         '--gcn_dim', '300',
