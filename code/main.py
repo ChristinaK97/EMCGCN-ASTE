@@ -127,7 +127,7 @@ def main(args_as_list=None):
 
 
 if __name__ == '__main__':
-    if sys.argv[1] == 'multiple_seeds':
+    if len(sys.argv) > 1 and sys.argv[1] == 'multiple_seeds':
         sys.argv.remove('multiple_seeds')
         args = run_datasets_with_multiple_seeds()
     else:
