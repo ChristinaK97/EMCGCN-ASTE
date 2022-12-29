@@ -34,7 +34,7 @@ def run_datasets_with_multiple_seeds():
     prefixes = ['../data/D1/', '../data/D2/']
     datasets = ['res14', 'lap14', 'res15', 'res16']
     seeds = [0, 42, 1000] + [random.randint(1, 1000) for _ in range(2)]
-    batch_sizes = 6
+    batch_sizes = 16
 
     args = get_args_as_list(tag, prefixes, datasets, seeds, batch_sizes)
     return args
