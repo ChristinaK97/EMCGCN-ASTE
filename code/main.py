@@ -141,8 +141,8 @@ def get_args_from_pycharm():
     # datasets 'res14', 'lap14', 'res15', 'res16'
     # use_features 'post', 'deprel', 'postag', 'synpost' maintain order
     return [
-        '--tag', 'Train for res14 with only synpost tree based distance',
-        '--use_features', 'synpost',
+        '--tag', 'Train for res16 with all ling feat',
+        '--use_features', 'post', 'deprel', 'postag', 'synpost',
         "--mode", "train",
         '--bert_model_path', 'bert-base-uncased',
         '--bert_feature_dim', '768',
@@ -159,7 +159,7 @@ def get_args_from_pycharm():
         '--gcn_dim', '300',
         '--pooling', 'avg',
         '--prefix', '../data/D2/',
-        '--dataset', 'res14'
+        '--dataset', 'res16'
     ]
 
 
