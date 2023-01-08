@@ -3,6 +3,8 @@
 import argparse
 import random
 import sys
+import time
+
 import numpy as np
 import torch
 
@@ -122,13 +124,14 @@ def main(args_as_list=None):
 
     results = SaveResults(parser)
     for model_param in results:         # 2
-        mode = model_param.mode
 
         if model_param is not None:     # 3
-            print(model_param)
+            mode = model_param.mode
             run_model(model_param, results)          # 4
             if mode == 'train':
                 results.write_output()      # 5
+        else:
+            mode = None
 
     if mode == 'train' and merge_results_files:             # 6
         results.merge_outputs()
@@ -141,8 +144,8 @@ def get_args_from_pycharm():
     # datasets 'res14', 'lap14', 'res15', 'res16'
     # use_features 'post', 'deprel', 'postag', 'synpost' maintain order
     return [
-        '--tag', 'Train for res16 with all ling feat',
-        '--use_features', 'post', 'deprel', 'postag', 'synpost',
+        '--tag', 'Train with rel pos dist and dependency combo',
+        '--use_features', 'post', 'deprel',
         "--mode", "train",
         '--bert_model_path', 'bert-base-uncased',
         '--bert_feature_dim', '768',
@@ -159,7 +162,7 @@ def get_args_from_pycharm():
         '--gcn_dim', '300',
         '--pooling', 'avg',
         '--prefix', '../data/D2/',
-        '--dataset', 'res16'
+        '--dataset', 'res14', 'lap14', 'res15', 'res16'
     ]
 
 
