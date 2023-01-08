@@ -12,7 +12,7 @@ from reproducibility.save_results import SaveResults
 # Don't remove : from prepare_vocab import VocabHelp
 from prepare_vocab import VocabHelp
 
-from reproducibility.paper_experiments import run_datasets_with_multiple_seeds
+from reproducibility.paper_experiments import *
 
 def run_parser():
     """
@@ -131,9 +131,16 @@ def main(args_as_list=None):
 
 
 if __name__ == '__main__':
+    # sys.argv.append('no_bert_finetunning')
+
     if len(sys.argv) > 1 and sys.argv[1] == 'multiple_seeds':
         sys.argv.remove('multiple_seeds')
         args = run_datasets_with_multiple_seeds()
+
+    elif len(sys.argv) > 1 and sys.argv[1] == 'no_bert_finetunning':
+        sys.argv.remove('no_bert_finetunning')
+        args = bert_without_finetuning()
+
     else:
         args = None
     main(args)

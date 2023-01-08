@@ -29,35 +29,58 @@ class ModelTraining:
         # # Prepare optimizer and schedule (linear warmup and decay)
         no_decay = ['bias', 'LayerNorm.weight']
         diff_part = ["bert.embeddings", "bert.encoder"]
+        optimizer_grouped_parameters = []
 
-        optimizer_grouped_parameters = [
-            {
-                "params": [p for n, p in model.named_parameters() if
-                           not any(nd in n for nd in no_decay) and any(nd in n for nd in diff_part)],
-                "weight_decay": self.args.weight_decay,
-                "lr": self.args.bert_lr
-            },
-            {
-                "params": [p for n, p in model.named_parameters() if
-                           any(nd in n for nd in no_decay) and any(nd in n for nd in diff_part)],
-                "weight_decay": 0.0,
-                "lr": self.args.bert_lr
-            },
+        if self.args.bert_lr != 0 :
+
+            print('Finetune bert')
+
+            # 'bert.embeddings.{word_embeddings, position_embeddings, token_type_embeddings}.weight',
+            #  FOR i = 0,..., # bert layers  :
+            # 'bert.encoder.layer.i.attention.self.{query, key, value}.weight',
+            # 'bert.encoder.layer.i.attention.output.dense.weight',
+            # 'bert.encoder.layer.i.intermediate.dense.weight',
+            # 'bert.encoder.layer.i.output.dense.weight'
+            optimizer_grouped_parameters.append(
+                {
+                    "params": [p for n, p in model.named_parameters() if
+                               not any(nd in n for nd in no_decay) and any(nd in n for nd in diff_part)],
+                    "weight_decay": self.args.weight_decay,
+                    "lr": self.args.bert_lr
+                })
+
+            # 'bert.embeddings.LayerNorm.{weight, bias}',
+            #  FOR i = 0,..., # bert layers  :
+            # 'bert.encoder.layer.i.attention.self.{query, key, value}.bias',
+            # 'bert.encoder.layer.i.attention.output.dense.bias',
+            # 'bert.encoder.layer.i.attention.output.LayerNorm.{weight, bias}',
+            # 'bert.encoder.layer.i.intermediate.dense.bias',
+            # 'bert.encoder.layer.i.output.dense.bias',
+            # 'bert.encoder.layer.i.output.LayerNorm.{weight, bias}'
+            optimizer_grouped_parameters.append(
+                {
+                    "params": [p for n, p in model.named_parameters() if
+                               any(nd in n for nd in no_decay) and any(nd in n for nd in diff_part)],
+                    "weight_decay": 0.0,
+                    "lr": self.args.bert_lr
+                })
+
+        # Model parameters :
+        optimizer_grouped_parameters.append(
             {
                 "params": [p for n, p in model.named_parameters() if
                            not any(nd in n for nd in no_decay) and not any(nd in n for nd in diff_part)],
                 "weight_decay": self.args.weight_decay,
                 "lr": self.args.learning_rate
-            },
+            })
+        optimizer_grouped_parameters.append(
             {
                 "params": [p for n, p in model.named_parameters() if
                            any(nd in n for nd in no_decay) and not any(nd in n for nd in diff_part)],
                 "weight_decay": 0.0,
                 "lr": self.args.learning_rate
-            },
-        ]
+            })
         optimizer = AdamW(optimizer_grouped_parameters, eps=self.args.adam_epsilon)
-
         return optimizer
 
     def train(self):

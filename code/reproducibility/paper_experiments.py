@@ -1,7 +1,7 @@
 import random
 
-def get_args_as_list(tag, prefixes, datasets, seeds, batch_sizes):
 
+def get_args_as_list(tag, prefixes, datasets, seeds, batch_sizes, bert_lr='2e-5'):
     # prefixes '../data/D1/', '../data/D2/'
     # datasets 'res14', 'lap14', 'res15', 'res16'
     return [
@@ -13,7 +13,7 @@ def get_args_as_list(tag, prefixes, datasets, seeds, batch_sizes):
         '--batch_size', *arg_values_as_string(batch_sizes),
         '--epochs', '100',
         '--learning_rate', '1e-3',
-        '--bert_lr', '2e-5',
+        '--bert_lr', bert_lr,
         '--adam_epsilon', '1e-8',
         '--weight_decay', '0.0',
         '--seed', *arg_values_as_string(seeds),
@@ -24,6 +24,7 @@ def get_args_as_list(tag, prefixes, datasets, seeds, batch_sizes):
         '--prefix', *prefixes,
         '--dataset', *datasets
     ]
+
 
 def arg_values_as_string(values):
     return [str(v) for v in values] if isinstance(values, list) else [str(values)]
@@ -40,12 +41,10 @@ def run_datasets_with_multiple_seeds():
     return args
 
 
+def bert_without_finetuning():
+    tag = "bert without finetuning"
+    prefixes = ['../data/D2/']
+    datasets = ['res14', 'lap14', 'res15', 'res16']
 
-
-
-
-
-
-
-
-
+    args = get_args_as_list(tag, prefixes, datasets, seeds=1000, batch_sizes=6, bert_lr='0')
+    return args
