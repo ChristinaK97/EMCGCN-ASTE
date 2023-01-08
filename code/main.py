@@ -116,19 +116,18 @@ def main(args_as_list=None):
     merge_results_files = True
 
     results = SaveResults(parser)
-    for model_param in results:         # 2
-        mode = model_param.mode
+    for model_param in results:  # 2
 
-        if model_param is not None:     # 3
-            print(model_param)
-            run_model(model_param, results)          # 4
+        if model_param is not None:  # 3
+            mode = model_param.mode
+            run_model(model_param, results)  # 4
             if mode == 'train':
-                results.write_output()      # 5
+                results.write_output()  # 5
+        else:
+            mode = None
 
-    if mode == 'train' and merge_results_files:             # 6
+    if mode == 'train' and merge_results_files:  # 6
         results.merge_outputs()
-
-
 
 
 if __name__ == '__main__':
