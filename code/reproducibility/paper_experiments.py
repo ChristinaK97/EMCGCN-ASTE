@@ -1,12 +1,16 @@
 import random
 
 
-def get_args_as_list(tag, prefixes, datasets, seeds, batch_sizes, bert_lr='2e-5'):
+def get_args_as_list(tag, prefixes, datasets, seeds, batch_sizes, bert_lr='2e-5', freezing_points=None):
     # prefixes '../data/D1/', '../data/D2/'
     # datasets 'res14', 'lap14', 'res15', 'res16'
+    if freezing_points is None:
+        freezing_points = ['-1']
+
     return [
         '--tag', tag,
         "--mode", "train",
+        '--freezing_point', *arg_values_as_string(freezing_points),
         '--bert_model_path', 'bert-base-uncased',
         '--bert_feature_dim', '768',
 
@@ -47,4 +51,14 @@ def bert_without_finetuning():
     datasets = ['res14', 'lap14', 'res15', 'res16']
 
     args = get_args_as_list(tag, prefixes, datasets, seeds=1000, batch_sizes=6, bert_lr='0')
+    return args
+
+def bert_unfreeze_layers():
+    tag = 'bert unfreeze layers'
+
+    prefixes = ['../data/D2/']
+    datasets = ['res15']
+    freezing_points = [str(i) for i in range(10, -1, -1)]
+
+    args = get_args_as_list(tag, prefixes, datasets, seeds=1000, batch_sizes=6, freezing_points=freezing_points)
     return args

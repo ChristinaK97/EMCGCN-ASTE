@@ -1,6 +1,7 @@
 import json
 import os
 import random
+import re
 import time
 
 import torch
@@ -33,7 +34,7 @@ class ModelTraining:
 
         if self.args.bert_lr != 0 :
 
-            print('Finetune bert')
+            # print('Finetune bert')
 
             # 'bert.embeddings.{word_embeddings, position_embeddings, token_type_embeddings}.weight',
             #  FOR i = 0,..., # bert layers  :
@@ -44,7 +45,8 @@ class ModelTraining:
             optimizer_grouped_parameters.append(
                 {
                     "params": [p for n, p in model.named_parameters() if
-                               not any(nd in n for nd in no_decay) and any(nd in n for nd in diff_part)],
+                               not any(nd in n for nd in no_decay) and any(nd in n for nd in diff_part)
+                               and self.unfreeze(n, self.args.freezing_point)],
                     "weight_decay": self.args.weight_decay,
                     "lr": self.args.bert_lr
                 })
@@ -60,7 +62,8 @@ class ModelTraining:
             optimizer_grouped_parameters.append(
                 {
                     "params": [p for n, p in model.named_parameters() if
-                               any(nd in n for nd in no_decay) and any(nd in n for nd in diff_part)],
+                               any(nd in n for nd in no_decay) and any(nd in n for nd in diff_part)
+                               and self.unfreeze(n, self.args.freezing_point)],
                     "weight_decay": 0.0,
                     "lr": self.args.bert_lr
                 })
@@ -81,7 +84,24 @@ class ModelTraining:
                 "lr": self.args.learning_rate
             })
         optimizer = AdamW(optimizer_grouped_parameters, eps=self.args.adam_epsilon)
+
         return optimizer
+
+
+    def unfreeze(self, named_param, freezing_point):
+        # for example for freezing_point = 9, encoding layers 10 and 11 will be trainable
+        # to train every layer, set freezing_point default value to -1 (since first enc layer=0)
+        try:
+            layer = re.findall(r'bert.encoder.layer.\d+', named_param)[0]
+            layer = int(re.findall('\d+', layer)[0])
+            # print('Unfreeze', layer, layer > freezing_point)
+            return layer > freezing_point
+        except Exception:
+            # named parameter is not a bert encoder layer related parameter,
+            # so it should be trainable
+            return True
+
+
 
     def train(self):
 

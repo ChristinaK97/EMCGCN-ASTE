@@ -3,6 +3,8 @@
 import argparse
 import random
 import sys
+import time
+
 import numpy as np
 import torch
 
@@ -27,8 +29,11 @@ def run_parser():
 
     parser = argparse.ArgumentParser()
 
+    # added
     parser.add_argument('--tag', type=str, default=" ",
                         help='A description given to the current experiment')
+    # added default value = -1 => every encoder layer is trainable. for point=9, layers 10, 11 trainable
+    parser.add_argument('--freezing_point', nargs='+', type=int, default=-1)
 
     parser.add_argument('--prefix', nargs='+', type=str, default="../data/D1/",
                         help='dataset and embedding path prefix')
@@ -126,12 +131,14 @@ def main(args_as_list=None):
         else:
             mode = None
 
+        time.sleep(360)
+
     if mode == 'train' and merge_results_files:  # 6
         results.merge_outputs()
 
 
 if __name__ == '__main__':
-    sys.argv.append('no_bert_finetunning')
+    # sys.argv.append('bert_unfreeze_layers')
 
     if len(sys.argv) > 1 and sys.argv[1] == 'multiple_seeds':
         sys.argv.remove('multiple_seeds')
@@ -140,6 +147,10 @@ if __name__ == '__main__':
     elif len(sys.argv) > 1 and sys.argv[1] == 'no_bert_finetunning':
         sys.argv.remove('no_bert_finetunning')
         args = bert_without_finetuning()
+
+    elif len(sys.argv) > 1 and sys.argv[1] == 'bert_unfreeze_layers':
+        sys.argv.remove('bert_unfreeze_layers')
+        args = bert_unfreeze_layers()
 
     else:
         args = None
