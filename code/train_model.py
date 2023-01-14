@@ -238,12 +238,11 @@ class ModelTraining:
                                                                        opinion_results[2]))
             print(self.args.task + '\t\tP:{:.5f}\tR:{:.5f}\tF1:{:.5f}\n'.format(precision, recall, f1))
 
-            if FLAG:
-                metric.tagReport()
+            scores_per_class = metric.tagReport() if FLAG else {}
 
         model.train()
         # MOD
-        self.results.update(given_set, {'f1': f1, 'precision': precision, 'recall': recall})
+        self.results.update(given_set, {**{'f1': f1, 'precision': precision, 'recall': recall}, **scores_per_class})
         return precision, recall, f1
 
     def test(self):
@@ -260,4 +259,4 @@ class ModelTraining:
         instances = load_data_instances(sentence_packs, post_vocab, deprel_vocab, postag_vocab, synpost_vocab,
                                         self.args)
         testset = DataIterator(instances, self.args)
-        self.eval(model, testset, False, given_set='test_set')
+        self.eval(model, testset, not self.args.use_refining, given_set='test_set')

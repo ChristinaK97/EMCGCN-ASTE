@@ -21,14 +21,18 @@ class LayerNorm(nn.Module):
 
 
 class RefiningStrategy(nn.Module):
-    def __init__(self, hidden_dim, edge_dim, dim_e, dropout_ratio=0.5):
+    def __init__(self, hidden_dim, edge_dim, dim_e, dropout_ratio=0.5, use_refining=True):
         super(RefiningStrategy, self).__init__()
         self.hidden_dim = hidden_dim
         self.edge_dim = edge_dim
         self.dim_e = dim_e
         self.dropout = dropout_ratio
-        self.W = nn.Linear(self.hidden_dim * 2 + self.edge_dim * 3, self.dim_e)
-        # self.W = nn.Linear(self.hidden_dim * 2 + self.edge_dim * 1, self.dim_e)
+        self.use_refining = use_refining
+
+        if use_refining:
+            self.W = nn.Linear(self.hidden_dim * 2 + self.edge_dim * 3, self.dim_e)
+        else:
+            self.W = nn.Linear(self.hidden_dim * 2 + self.edge_dim * 1, self.dim_e)
 
     def forward(self, edge, node1, node2):
         batch, seq, seq, edge_dim = edge.shape
@@ -37,17 +41,18 @@ class RefiningStrategy(nn.Module):
         edge_diag = torch.diagonal(edge, offset=0, dim1=1, dim2=2).permute(0, 2, 1).contiguous()
         edge_i = edge_diag.unsqueeze(1).expand(batch, seq, seq, edge_dim)
         edge_j = edge_i.permute(0, 2, 1, 3).contiguous()
-        edge = self.W(torch.cat([edge, edge_i, edge_j, node], dim=-1))
 
-        # edge = self.W(torch.cat([edge, node], dim=-1))
-
+        if self.use_refining:
+            edge = self.W(torch.cat([edge, edge_i, edge_j, node], dim=-1))
+        else:
+            edge = self.W(torch.cat([edge, node], dim=-1))
         return edge
 
 
 class GraphConvLayer(nn.Module):
     """ A GCN module operated on dependency graphs. """
 
-    def __init__(self, device, gcn_dim, edge_dim, dep_embed_dim, pooling='avg'):
+    def __init__(self, device, gcn_dim, edge_dim, dep_embed_dim, pooling='avg', use_refining=True):
         super(GraphConvLayer, self).__init__()
         self.gcn_dim = gcn_dim
         self.edge_dim = edge_dim
@@ -56,7 +61,7 @@ class GraphConvLayer(nn.Module):
         self.pooling = pooling
         self.layernorm = LayerNorm(self.gcn_dim)
         self.W = nn.Linear(self.gcn_dim, self.gcn_dim)
-        self.highway = RefiningStrategy(gcn_dim, self.edge_dim, self.dep_embed_dim, dropout_ratio=0.5)
+        self.highway = RefiningStrategy(gcn_dim, self.edge_dim, self.dep_embed_dim, dropout_ratio=0.5, use_refining=use_refining)
 
     def forward(self, weight_prob_softmax, weight_adj, gcn_inputs, self_loop):
         batch, seq, dim = gcn_inputs.shape
@@ -145,7 +150,7 @@ class EMCGCN(torch.nn.Module):
 
         for i in range(self.num_layers):
             self.gcn_layers.append(
-                GraphConvLayer(args.device, args.gcn_dim, 5*args.class_num, args.class_num, args.pooling))
+                GraphConvLayer(args.device, args.gcn_dim, 5*args.class_num, args.class_num, args.pooling, use_refining=self.args.use_refining))
 
     def forward(self, tokens, masks, word_pair_position, word_pair_deprel, word_pair_pos, word_pair_synpost):
         bert_feature, _ = self.bert(tokens, masks)

@@ -247,4 +247,12 @@ class Metric():
         print(len(golden_tags))
         print(len(predict_tags))
         target_names = ['N', 'B-A', 'I-A', 'A', 'B-O', 'I-O', 'O', 'negative', 'neutral', 'positive']
-        print(metrics.classification_report(golden_tags, predict_tags, target_names=target_names, digits=4))
+        # MOD
+        report = metrics.classification_report(golden_tags, predict_tags, target_names=target_names, digits=4, output_dict=True, zero_division=0)
+        results = {}
+        for label in ['positive', 'negative', 'neutral']:
+            for metric, value in report[label].items():
+                if metric != 'support':
+                    results[f'{label} {metric}'] = value
+
+        return results

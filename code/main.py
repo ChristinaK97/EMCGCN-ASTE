@@ -35,6 +35,8 @@ def run_parser():
     # added default value = -1 => every encoder layer is trainable. for point=9, layers 10, 11 trainable
     parser.add_argument('--freezing_point', nargs='+', type=int, default=-1)
 
+    # parser.add_argument('--use_refining', type=bool, default=True)
+
     parser.add_argument('--prefix', nargs='+', type=str, default="../data/D1/",
                         help='dataset and embedding path prefix')
     parser.add_argument('--model_dir', type=str, default="savemodel/",
@@ -153,7 +155,7 @@ if __name__ == '__main__':
         args = bert_unfreeze_layers()
 
     else:
-        args = None
+        args = no_refine_strategy()
     main(args)
 
 

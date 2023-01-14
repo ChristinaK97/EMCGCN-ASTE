@@ -1,7 +1,7 @@
 import random
 
 
-def get_args_as_list(tag, prefixes, datasets, seeds, batch_sizes, bert_lr='2e-5', freezing_points=None):
+def get_args_as_list(tag, prefixes, datasets, seeds, batch_sizes, bert_lr='2e-5', freezing_points=None, use_refining=True):
     # prefixes '../data/D1/', '../data/D2/'
     # datasets 'res14', 'lap14', 'res15', 'res16'
     if freezing_points is None:
@@ -15,7 +15,7 @@ def get_args_as_list(tag, prefixes, datasets, seeds, batch_sizes, bert_lr='2e-5'
         '--bert_feature_dim', '768',
 
         '--batch_size', *arg_values_as_string(batch_sizes),
-        '--epochs', '100',
+        '--epochs', '1',
         '--learning_rate', '1e-3',
         '--bert_lr', bert_lr,
         '--adam_epsilon', '1e-8',
@@ -27,6 +27,8 @@ def get_args_as_list(tag, prefixes, datasets, seeds, batch_sizes, bert_lr='2e-5'
         '--pooling', 'avg',
         '--prefix', *prefixes,
         '--dataset', *datasets
+
+        #'--use_refining', str(use_refining)
     ]
 
 
@@ -61,4 +63,13 @@ def bert_unfreeze_layers():
     freezing_points = [str(i) for i in range(10, -1, -1)]
 
     args = get_args_as_list(tag, prefixes, datasets, seeds=1000, batch_sizes=6, freezing_points=freezing_points)
+    return args
+
+
+def no_refine_strategy():
+    tag = "no refine strategy"
+    prefixes = ['../data/D2/']
+    datasets = ['res15', 'res16']
+
+    args = get_args_as_list(tag, prefixes, datasets, seeds=1000, batch_sizes=6, use_refining=True)
     return args
