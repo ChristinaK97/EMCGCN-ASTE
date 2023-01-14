@@ -38,7 +38,7 @@ def run_datasets_with_multiple_seeds():
     tag = "run datasets with multiple seeds"
     prefixes = ['../data/D1/', '../data/D2/']
     datasets = ['res14', 'lap14', 'res15', 'res16']
-    seeds = [0, 42, 1000] + [random.randint(1, 1000) for _ in range(2)]
+    seeds = [0, 42, 92, 153, 1000]
     batch_sizes = 16
 
     args = get_args_as_list(tag, prefixes, datasets, seeds, batch_sizes)
@@ -57,7 +57,7 @@ def bert_unfreeze_layers():
     tag = 'bert unfreeze layers'
 
     prefixes = ['../data/D2/']
-    datasets = ['res15']
+    datasets = ['res14', 'res15']
     freezing_points = [str(i) for i in range(10, -1, -1)]
 
     args = get_args_as_list(tag, prefixes, datasets, seeds=1000, batch_sizes=6, freezing_points=freezing_points)
