@@ -69,7 +69,7 @@ def bert_unfreeze_layers():
 def no_refining_strategy():
     tag = "no refining strategy"
     prefixes = ['../data/D2/']
-    datasets = ['res15', 'res16']
+    datasets = ['res14', 'lap14', 'res15', 'res16']
 
     args = get_args_as_list(tag, prefixes, datasets, seeds=1000, batch_sizes=6, use_refining=False)
     return args
