@@ -35,7 +35,7 @@ def run_parser():
     # added default value = -1 => every encoder layer is trainable. for point=9, layers 10, 11 trainable
     parser.add_argument('--freezing_point', nargs='+', type=int, default=-1)
 
-    # parser.add_argument('--use_refining', type=bool, default=True)
+    parser.add_argument('--use_refining', default=1, type=int)
 
     parser.add_argument('--prefix', nargs='+', type=str, default="../data/D1/",
                         help='dataset and embedding path prefix')
@@ -133,14 +133,14 @@ def main(args_as_list=None):
         else:
             mode = None
 
-        time.sleep(360)
+        # time.sleep(360)
 
     if mode == 'train' and merge_results_files:  # 6
         results.merge_outputs()
 
 
 if __name__ == '__main__':
-    # sys.argv.append('bert_unfreeze_layers')
+    sys.argv.append('no_refining_strategy')
 
     if len(sys.argv) > 1 and sys.argv[1] == 'multiple_seeds':
         sys.argv.remove('multiple_seeds')
@@ -154,8 +154,12 @@ if __name__ == '__main__':
         sys.argv.remove('bert_unfreeze_layers')
         args = bert_unfreeze_layers()
 
+    elif len(sys.argv) > 1 and sys.argv[1] == 'no_refining_strategy':
+        sys.argv.remove('no_refining_strategy')
+        args = no_refining_strategy()
+
     else:
-        args = no_refine_strategy()
+        args = None
     main(args)
 
 

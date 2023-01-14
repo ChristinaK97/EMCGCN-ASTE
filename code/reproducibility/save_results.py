@@ -172,6 +172,7 @@ class SaveResults:
         for f in self.mod_args:
             if f not in ['prefix', 'dataset']:
                 filename += f'{f}-{self.modified[f]}__'
+        filename = filename.replace('/', '-')
         return f'{filename}.json'
 
     def _model_parameters(self):

@@ -14,6 +14,8 @@ def get_args_as_list(tag, prefixes, datasets, seeds, batch_sizes, bert_lr='2e-5'
         '--bert_model_path', 'bert-base-uncased',
         '--bert_feature_dim', '768',
 
+        '--use_refining', '1' if use_refining else '0',
+
         '--batch_size', *arg_values_as_string(batch_sizes),
         '--epochs', '1',
         '--learning_rate', '1e-3',
@@ -27,8 +29,6 @@ def get_args_as_list(tag, prefixes, datasets, seeds, batch_sizes, bert_lr='2e-5'
         '--pooling', 'avg',
         '--prefix', *prefixes,
         '--dataset', *datasets
-
-        #'--use_refining', str(use_refining)
     ]
 
 
@@ -66,10 +66,10 @@ def bert_unfreeze_layers():
     return args
 
 
-def no_refine_strategy():
-    tag = "no refine strategy"
+def no_refining_strategy():
+    tag = "no refining strategy"
     prefixes = ['../data/D2/']
     datasets = ['res15', 'res16']
 
-    args = get_args_as_list(tag, prefixes, datasets, seeds=1000, batch_sizes=6, use_refining=True)
+    args = get_args_as_list(tag, prefixes, datasets, seeds=1000, batch_sizes=6, use_refining=False)
     return args

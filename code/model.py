@@ -31,7 +31,9 @@ class RefiningStrategy(nn.Module):
 
         if use_refining:
             self.W = nn.Linear(self.hidden_dim * 2 + self.edge_dim * 3, self.dim_e)
+            print('use_refining')
         else:
+            print(' dont use_refining')
             self.W = nn.Linear(self.hidden_dim * 2 + self.edge_dim * 1, self.dim_e)
 
     def forward(self, edge, node1, node2):
