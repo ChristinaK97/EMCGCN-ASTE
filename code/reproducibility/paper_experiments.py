@@ -17,7 +17,7 @@ def get_args_as_list(tag, prefixes, datasets, seeds, batch_sizes, bert_lr='2e-5'
         '--use_refining', '1' if use_refining else '0',
 
         '--batch_size', *arg_values_as_string(batch_sizes),
-        '--epochs', '1',
+        '--epochs', '100',
         '--learning_rate', '1e-3',
         '--bert_lr', bert_lr,
         '--adam_epsilon', '1e-8',
