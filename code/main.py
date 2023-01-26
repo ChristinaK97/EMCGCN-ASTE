@@ -147,7 +147,7 @@ def main(args_as_list=None):
 
 if __name__ == '__main__':
     # sys.argv.append('exclude_LF')
-    sys.argv.extend(['--dataset', 'res15', '--batch_size', '6'])
+    # sys.argv.extend(['--dataset', 'res15', '--batch_size', '6'])
 
     if len(sys.argv) > 1 and sys.argv[1] == 'multiple_seeds':
         sys.argv.remove('multiple_seeds')
