@@ -14,7 +14,7 @@ from reproducibility.save_results import SaveResults
 # Don't remove : from prepare_vocab import VocabHelp
 from prepare_vocab import VocabHelp
 
-from reproducibility.paper_experiments import *
+from reproducibility.setup_experiments import *
 
 def run_parser():
     """
@@ -36,6 +36,9 @@ def run_parser():
     parser.add_argument('--freezing_point', nargs='+', type=int, default=-1)
 
     parser.add_argument('--use_refining', default=1, type=int)
+    parser.add_argument('--use_features', nargs='+', type=str, default=['post', 'deprel', 'postag', 'synpost'],
+                        help='dataset and embedding path prefix')
+
 
     parser.add_argument('--prefix', nargs='+', type=str, default="../data/D1/",
                         help='dataset and embedding path prefix')
@@ -92,6 +95,9 @@ def set_seed(seed):
 def run_model(args, results):
     # torch.set_printoptions(precision=None, threshold=float("inf"), edgeitems=None, linewidth=None, profile=None)
 
+    if args.use_features == ['None']:
+        setattr(args, 'use_features', [])
+
     if args.seed is not None:
         set_seed(args.seed)
 
@@ -140,12 +146,16 @@ def main(args_as_list=None):
 
 
 if __name__ == '__main__':
-    # sys.argv.append('no_refining_strategy')
-    # sys.argv.extend(['--dataset', 'res15', '--batch_size', '6'])
+    # sys.argv.append('exclude_LF')
+    sys.argv.extend(['--dataset', 'res15', '--batch_size', '6'])
 
     if len(sys.argv) > 1 and sys.argv[1] == 'multiple_seeds':
         sys.argv.remove('multiple_seeds')
         args = run_datasets_with_multiple_seeds()
+
+    elif len(sys.argv) > 1 and sys.argv[1] == 'exclude_LF':
+        sys.argv.remove('exclude_LF')
+        args = exclude_LF()
 
     elif len(sys.argv) > 1 and sys.argv[1] == 'no_bert_finetunning':
         sys.argv.remove('no_bert_finetunning')

@@ -104,12 +104,12 @@ class SaveResults:
         @param value: Η τιμή που δώθηκε από το χρήστη
         @param default: Η προκαθορισμένη τιμή του parser
         """
-        if arg == 'tag' :
+        if arg in {'tag', 'use_features'} :
             return True
         if arg == 'prefix' or arg == 'dataset':  # 1
             return False
         if isinstance(value, list) :  # 2
-            return len(value) == 1 and self._get_arg_value(value) == default
+            return len(value) == 1 and self._get_arg_value(value, arg) == default
         else:
             return value == default  # 3
 
@@ -172,6 +172,9 @@ class SaveResults:
         for f in self.mod_args:
             if f not in ['prefix', 'dataset']:
                 filename += f'{f}-{self.modified[f]}__'
+        filename += 'use_feat-'
+        for feat in getattr(self.given_args, 'use_features'):
+            filename += f'{feat}-'
         filename = filename.replace('/', '-')
         return f'{filename}.json'
 
@@ -184,17 +187,17 @@ class SaveResults:
         """
         for arg, value in vars(self.given_args).items():
             setattr(self.given_args, arg,
-                    self.modified.get(arg, self._get_arg_value(value))
+                    self.modified.get(arg, self._get_arg_value(value, arg))
             )
 
 
-    def _get_arg_value(self, value):
+    def _get_arg_value(self, value, arg):
         """
         @param value: list(type(arg)) για args που διαβάζονται με την μορφή λίστας (nargs='+')
                             => πρέπει να γίνει type(arg)
                 type(arg) μένει όπως είναι
         """
-        return value[0] if isinstance(value, list) else value
+        return value[0] if isinstance(value, list) and arg != 'use_features' else value
 
 
     def update(self, field, value):
